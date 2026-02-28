@@ -10,8 +10,9 @@ export async function GET() {
     await connectDB();
     const categories = await Category.find({}).sort({ name: 1 });
     return NextResponse.json(categories);
-  } catch (error) {
-    return NextResponse.json({ message: 'Server error', error }, { status: 500 });
+  } catch (error: any) {
+    console.error('Error al obtener categorías:', error);
+    return NextResponse.json({ message: 'Server error: ' + (error.message || 'Error desconocido') }, { status: 500 });
   }
 }
 
@@ -34,8 +35,9 @@ export async function POST(request: Request) {
     const newCategory = new Category({ name });
     await newCategory.save();
     return NextResponse.json(newCategory, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ message: 'Server error', error }, { status: 500 });
+  } catch (error: any) {
+    console.error('Error al crear categoría:', error);
+    return NextResponse.json({ message: 'Server error: ' + (error.message || 'Error desconocido') }, { status: 500 });
   }
 }
 
@@ -57,7 +59,8 @@ export async function DELETE(request: Request) {
       }
   
       return NextResponse.json({ message: 'Categoría eliminada exitosamente' });
-    } catch (error) {
-      return NextResponse.json({ message: 'Server error', error }, { status: 500 });
+    } catch (error: any) {
+      console.error('Error al eliminar categoría:', error);
+      return NextResponse.json({ message: 'Server error: ' + (error.message || 'Error desconocido') }, { status: 500 });
     }
   }

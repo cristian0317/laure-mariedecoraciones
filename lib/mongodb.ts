@@ -12,9 +12,11 @@ export async function connectDB() {
   if (!cached.promise) {
     const MONGODB_URI = process.env.MONGODB_URI;
     if (!MONGODB_URI) {
-      throw new Error("Define la variable MONGODB_URI en .env.local");
+      console.error("MONGODB_URI no está definida en las variables de entorno de Vercel.");
+      throw new Error("Configuración de base de datos incompleta (Falta MONGODB_URI en Vercel)");
     }
     cached.promise = mongoose.connect(MONGODB_URI).then((mongoose) => {
+      console.log("Conexión a MongoDB exitosa");
       return mongoose;
     });
   }
