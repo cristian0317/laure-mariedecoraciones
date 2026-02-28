@@ -6,22 +6,47 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
   const { pathname } = request.nextUrl;
 
-  // Si no hay token y la ruta es protegida, redirigir al login
-  if (!token && pathname.startsWith('/admin/dashboard')) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/admin';
-    return NextResponse.redirect(url);
-  }
+  console.log('Middleware ejecutándose para:', pathname);
 
-  // Si hay token, verificarlo
-  if (token) {
-    const decoded = await verifyToken(token);
+  // Definir rutas protegidas
+  const isProtectedRoute = pathname.startsWith('/admin/dashboard') || pathname.startsWith('/admin/categories');
 
-    // Si el token no es válido y la ruta es protegida, redirigir al login
-    if (!decoded && pathname.startsWith('/admin/dashboard')) {
+  if (isProtectedRoute) {
+    if (!token) {
+      console.log('No hay token, redirigiendo a /admin');
       const url = request.nextUrl.clone();
       url.pathname = '/admin';
       return NextResponse.redirect(url);
+    }
+
+    try {
+      const decoded = await verifyToken(token);
+      if (!decoded) {
+        console.log('Token inválido, redirigiendo a /admin');
+        const url = request.nextUrl.clone();
+        url.pathname = '/admin';
+        return NextResponse.redirect(url);
+      }
+      console.log('Token válido, permitiendo acceso');
+    } catch (error) {
+      console.error('Error verificando token en middleware:', error);
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin';
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Si ya tiene token y trata de ir al login (/admin), llevarlo al dashboard
+  if (token && pathname === '/admin') {
+    try {
+      const decoded = await verifyToken(token);
+      if (decoded) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/admin/dashboard';
+        return NextResponse.redirect(url);
+      }
+    } catch (e) {
+      // Si falla, dejamos que vea el login
     }
   }
 
@@ -29,5 +54,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/dashboard/:path*'],
+  matcher: [
+    '/admin',
+    '/admin/dashboard/:path*',
+    '/admin/categories/:path*',
+  ],
 };
