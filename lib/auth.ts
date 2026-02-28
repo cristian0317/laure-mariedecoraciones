@@ -1,35 +1,36 @@
 import { SignJWT, jwtVerify } from 'jose';
 
-function getSecretKey(): Uint8Array {
-  const JWT_SECRET = process.env.JWT_SECRET;
-  if (!JWT_SECRET) {
-    throw new Error('La variable de entorno JWT_SECRET no está definida');
+const getSecretKey = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET no está definida en las variables de entorno');
   }
-  return new TextEncoder().encode(JWT_SECRET);
-}
+  return new TextEncoder().encode(secret);
+};
 
-interface UserPayload {
-  email: string;
-  [propName: string]: unknown;
-}
-
-export async function signToken(payload: UserPayload): Promise<string> {
-  const secretKey = getSecretKey();
-  return new SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('1h')
-    .sign(secretKey);
-}
-
-export async function verifyToken(token: string): Promise<UserPayload | null> {
+export async function signToken(payload: any) {
   try {
-    const secretKey = getSecretKey();
-    const { payload } = await jwtVerify(token, secretKey, {
+    const secret = getSecretKey();
+    return await new SignJWT(payload)
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('2h')
+      .sign(secret);
+  } catch (error) {
+    console.error('Error signing token:', error);
+    throw error;
+  }
+}
+
+export async function verifyToken(token: string) {
+  try {
+    const secret = getSecretKey();
+    const { payload } = await jwtVerify(token, secret, {
       algorithms: ['HS256'],
     });
-    return payload as UserPayload;
+    return payload;
   } catch (error) {
+    console.error('Error verifying token:', error);
     return null;
   }
 }

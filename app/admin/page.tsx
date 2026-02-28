@@ -18,6 +18,7 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
+      console.log('Intentando login para:', email);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -26,15 +27,19 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await response.json().catch(() => ({ message: 'Error: El servidor no devolvió un JSON válido.' }));
+      
       if (response.ok) {
+        console.log('Login exitoso, redirigiendo...');
         router.push('/admin/dashboard');
+        // No quitamos el loading aquí para que el usuario vea que se está moviendo de página
       } else {
-        const data = await response.json();
         setError(data.message || 'Credenciales incorrectas');
+        setLoading(false);
       }
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
-    } finally {
+    } catch (err: any) {
+      console.error('Error en la petición de login:', err);
+      setError('Error de red o del servidor. Por favor, revisa tu conexión.');
       setLoading(false);
     }
   };
@@ -43,9 +48,8 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-xl shadow-lg z-10">
         <div className="text-center">
-          {/* You can add your logo here */}
           <Image
-            src="/img/logo.png" // Assuming you have a logo at this path
+            src="/img/logo.png"
             alt="Company Logo"
             width={100}
             height={100}
@@ -60,7 +64,9 @@ export default function AdminLogin() {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
           )}
           <div className="space-y-4">
             <div>
@@ -71,7 +77,6 @@ export default function AdminLogin() {
                 id="email-address"
                 name="email"
                 type="email"
-                autoComplete="email"
                 required
                 className="w-full bg-white text-gray-900 placeholder-gray-400 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black transition"
                 placeholder="Email address"
@@ -87,7 +92,6 @@ export default function AdminLogin() {
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
                 required
                 className="w-full bg-white text-gray-900 placeholder-gray-400 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black transition"
                 placeholder="Password"
@@ -101,7 +105,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:bg-purple-300"
             >
               {loading ? 'Logging in...' : 'Sign in'}
             </button>
